@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPL 6분할 운동 플랜 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --card: #111111;
+    --border: #222222;
+    --accent: #00e5a0;
+    --accent2: #ff4d4d;
+    --text: #f0f0f0;
+    --muted: #888;
+    --day1: #00e5a0;
+    --day2: #ff6b35;
+    --day3: #4ecdc4;
+    --day4: #a8e063;
+    --day5: #f7971e;
+    --day6: #f953c6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  .header {
+    text-align: center;
+    padding: 40px 20px 30px;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 1px; height: 40px;
+    background: var(--accent);
+  }
+  .header-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 4px; color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 14px; margin-bottom: 16px;
+  }
+  .header h1 {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: clamp(28px, 6vw, 52px);
+    line-height: 1.1; letter-spacing: -1px; margin-bottom: 8px;
+  }
+  .header h1 span { color: var(--accent); }
+  .header-sub { font-size: 13px; color: var(--muted); letter-spacing: 1px; margin-bottom: 24px; }
+
+  .stats-row { display: flex; justify-content: center; gap: 32px; margin-top: 20px; }
+  .stat { text-align: center; }
+  .stat-num { font-family: 'Black Han Sans', sans-serif; font-size: 28px; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: 1px; }
+
+  .goal-banner {
+    background: linear-gradient(135deg, #111 0%, #1a1a1a 100%);
+    border: 1px solid #2a2a2a; border-left: 3px solid var(--accent2);
+    padding: 16px 20px; margin: 0 auto 32px; max-width: 700px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .goal-icon { font-size: 28px; flex-shrink: 0; }
+  .goal-text { font-size: 13px; line-height: 1.6; color: #ccc; }
+  .goal-text strong { color: var(--accent); font-weight: 700; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px; max-width: 1100px; margin: 0 auto;
+  }
+
+  .day-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    overflow: hidden; position: relative;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .day-card:hover { transform: translateY(-3px); border-color: #333; }
+  .day-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: var(--day-color);
+  }
+
+  .card-header {
+    padding: 20px 20px 16px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .day-num {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 42px; color: var(--day-color);
+    line-height: 1; opacity: 0.15;
+    position: absolute; right: 16px; top: 12px;
+  }
+  .day-label { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: var(--day-color); margin-bottom: 4px; }
+  .day-title { font-family: 'Black Han Sans', sans-serif; font-size: 20px; letter-spacing: -0.5px; line-height: 1.2; }
+  .day-tags { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10px; font-weight: 700; padding: 3px 8px;
+    letter-spacing: 0.5px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+  }
+
+  .exercise-list { padding: 16px 20px; }
+
+  .cardio-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--day-color);
+    margin-bottom: 10px;
+  }
+  .cardio-icon { font-size: 18px; }
+  .cardio-name { font-size: 13px; font-weight: 700; color: var(--day-color); }
+  .cardio-detail { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+    margin: 12px 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .exercise-item {
+    display: grid;
+    grid-template-columns: 20px 1fr auto;
+    gap: 8px; align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .exercise-item:last-child { border-bottom: none; }
+  .ex-num { font-size: 11px; font-weight: 700; color: var(--day-color); opacity: 0.6; font-family: 'Black Han Sans', sans-serif; }
+  .ex-name { font-size: 13px; font-weight: 500; line-height: 1.3; }
+  .ex-badge {
+    display: inline-block; font-size: 9px; font-weight: 700;
+    padding: 1px 5px; margin-left: 4px;
+    border-radius: 2px; vertical-align: middle;
+  }
+  .badge-new { background: rgba(0,229,160,0.15); color: var(--accent); border: 1px solid rgba(0,229,160,0.3); }
+  .badge-db { background: rgba(255,215,0,0.1); color: #ffd700; border: 1px solid rgba(255,215,0,0.2); }
+  .badge-body { background: rgba(200,200,255,0.1); color: #aab; border: 1px solid rgba(200,200,255,0.2); }
+  .ex-vol {
+    font-size: 11px; color: var(--muted); text-align: right;
+    white-space: nowrap; font-weight: 700;
+    font-family: monospace; letter-spacing: 0.5px;
+  }
+
+  /* Alt table */
+  .alt-section {
+    background: rgba(255,255,255,0.02);
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+  }
+  .alt-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 2px;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .alt-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .alt-table { width: 100%; border-collapse: collapse; }
+  .alt-table th {
+    font-size: 9px; font-weight: 700; letter-spacing: 1px;
+    color: var(--muted); text-transform: uppercase;
+    padding: 4px 6px; border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .alt-table th:first-child { color: var(--day-color); }
+  .alt-table td {
+    font-size: 11px; color: #777;
+    padding: 5px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: middle;
+  }
+  .alt-table tr:last-child td { border-bottom: none; }
+  .alt-table td:first-child { color: #aaa; font-weight: 500; }
+  .alt-arrow { color: var(--day-color); opacity: 0.4; font-size: 10px; }
+
+  /* Summary */
+  .summary-card {
+    max-width: 1100px; margin: 24px auto 0;
+    background: var(--card); border: 1px solid var(--border); padding: 24px;
+  }
+  .summary-title {
+    font-family: 'Black Han Sans', sans-serif; font-size: 16px;
+    letter-spacing: 1px; margin-bottom: 16px; color: var(--accent);
+  }
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .week-day {
+    text-align: center; padding: 12px 6px;
+    background: rgba(255,255,255,0.03); border: 1px solid transparent;
+  }
+  .week-day.active { border-color: rgba(255,255,255,0.1); }
+  .week-day.rest { opacity: 0.3; }
+  .week-day-name { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+  .week-day-content { font-size: 10px; font-weight: 700; line-height: 1.4; }
+  .week-day-dot { width: 6px; height: 6px; border-radius: 50%; margin: 6px auto 0; }
+
+  /* Legend */
+  .legend {
+    max-width: 1100px; margin: 16px auto 0;
+    display: flex; gap: 16px; flex-wrap: wrap;
+    background: var(--card); border: 1px solid var(--border); padding: 16px 20px;
+    align-items: center;
+  }
+  .legend-title { font-size: 11px; color: var(--muted); font-weight: 700; letter-spacing: 1px; margin-right: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
+
+  /* Principles */
+  .principles {
+    max-width: 1100px; margin: 16px auto 0;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  }
+  .principle {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 16px; display: flex; gap: 12px; align-items: flex-start;
+  }
+  .principle-icon { font-size: 20px; flex-shrink: 0; }
+  .principle-text h4 { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; letter-spacing: 0.5px; }
+  .principle-text p { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  .footer {
+    text-align: center; padding: 32px 20px;
+    color: var(--muted); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .principles { grid-template-columns: 1fr; }
+    .week-grid { gap: 4px; }
+    .week-day-content { font-size: 9px; }
+    .stats-row { gap: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-tag">준킴쌤 맞춤 플랜 v2</div>
+  <h1>PPL <span>6분할</span><br>운동 플랜</h1>
+  <div class="header-sub">Push · Pull · Legs × 2사이클 | 주 5–6회 | 저녁 9시</div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-num">6</div><div class="stat-label">분할</div></div>
+    <div class="stat"><div class="stat-num">90<span style="font-size:16px">분</span></div><div class="stat-label">세션</div></div>
+    <div class="stat"><div class="stat-num">84<span style="font-size:14px;color:#888">→</span>79</div><div class="stat-label">목표 kg</div></div>
+  </div>
+</div>
+
+<!-- Goal -->
+<div class="goal-banner">
+  <div class="goal-icon">🎯</div>
+  <div class="goal-text">
+    <strong>목표:</strong> 체중 감량 + 전신 균형 + 뱃살 제거<br>
+    유산소 <strong>매 세션 앞 15–20분 고정</strong> · 무게보다 <strong>자세 우선</strong> · 기구 밀리면 대체표 바로 적용
+  </div>
+</div>
+
+<div class="grid">
+
+<!-- ===== DAY 1 ===== -->
+<div class="day-card" style="--day-color: var(--day1)">
+  <div class="card-header">
+    <div>
+      <div class="day-label">Day 1 · 월요일</div>
+      <div class="day-title">등 + 이두</div>
+      <div class="day-tags">
+        <span class="tag" style="background:rgba(0,229,160,0.08);border-color:rgba(0,229,160,0.3);color:var(--day1)">Pull A</span>
+        <span class="tag">당기기</span><span class="tag">유산소</span>
+      </div>
+    </div>
+    <div class="day-num">01</div>
+  </div>
+  <div class="exercise-list">
+    <div class="cardio-item">
+      <div class="cardio-icon">🏃</div>
+      <div>
+        <div class="cardio-name">인클라인 트레드밀 러닝</div>
+        <div class="cardio-detail">15분 · 4km/h · 경사 14</div>
+      </div>
+    </div>
+    <div class="section-label">등 (Back)</div>
+    <div class="exercise-item"><span class="ex-num">1</span><span class="ex-name">랫 풀다운</span><span class="ex-vol">4×10</span></div>
+    <div class="exercise-item"><span class="ex-num">2</span><span class="ex-name">시티드 케이블 로우</span><span class="ex-vol">4×13 · 40kg</span></div>
+    <div class="exercise-item"><span class="ex-num">3</span><span class="ex-name">암 풀다운</span><span class="ex-vol">3×14 · 30kg</span></div>
+    <div class="exercise-item"><span class="ex-num">4</span><span class="ex-name">덤벨 벤트오버 로우 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×12 · 14kg</span></div>
+    <div class="section-label">이두 (Biceps)</div>
+    <div class="exercise-item"><span class="ex-num">5</span><span class="ex-name">프리쳐 컬 머신</span><span class="ex-vol">4×13 · 55kg</span></div>
+    <div class="exercise-item"><span class="ex-num">6</span><span class="ex-name">덤벨 바이셉 컬 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">4×10 · 12kg</span></div>
+    <div class="exercise-item"><span class="ex-num">7</span><span class="ex-name">해머 컬 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×10 · 12kg</span></div>
+  </div>
+  <div class="alt-section">
+    <div class="alt-label">기구 밀릴 때 대체</div>
+    <table class="alt-table">
+      <tr><th>메인</th><th></th><th>대체 1</th><th>대체 2</th><th>대체 3</th></tr>
+      <tr><td>랫 풀다운</td><td class="alt-arrow">→</td><td>암 풀다운</td><td>케이블 로우</td><td>덤벨 벤트오버</td></tr>
+      <tr><td>케이블 로우</td><td class="alt-arrow">→</td><td>로우 머신</td><td>바벨 로우</td><td>덤벨 로우</td></tr>
+      <tr><td>프리쳐 컬</td><td class="alt-arrow">→</td><td>덤벨 컬</td><td>해머 컬</td><td>케이블 컬</td></tr>
+      <tr><td>트레드밀</td><td class="alt-arrow">→</td><td>싸이클</td><td>줄넘기</td><td>스트레칭만</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== DAY 2 ===== -->
+<div class="day-card" style="--day-color: var(--day2)">
+  <div class="card-header">
+    <div>
+      <div class="day-label">Day 2 · 화요일</div>
+      <div class="day-title">가슴 + 삼두</div>
+      <div class="day-tags">
+        <span class="tag" style="background:rgba(255,107,53,0.08);border-color:rgba(255,107,53,0.3);color:var(--day2)">Push A</span>
+        <span class="tag">밀기</span><span class="tag">유산소</span>
+      </div>
+    </div>
+    <div class="day-num">02</div>
+  </div>
+  <div class="exercise-list">
+    <div class="cardio-item">
+      <div class="cardio-icon">🚴</div>
+      <div>
+        <div class="cardio-name">싸이클</div>
+        <div class="cardio-detail">25분 · 인터벌 · 6저항</div>
+      </div>
+    </div>
+    <div class="section-label">가슴 (Chest)</div>
+    <div class="exercise-item"><span class="ex-num">1</span><span class="ex-name">스미스 머신 벤치 프레스</span><span class="ex-vol">4×10 · 50kg</span></div>
+    <div class="exercise-item"><span class="ex-num">2</span><span class="ex-name">인클라인 벤치 프레스 머신</span><span class="ex-vol">3×9 · 35kg</span></div>
+    <div class="exercise-item"><span class="ex-num">3</span><span class="ex-name">체스트 프레스 머신</span><span class="ex-vol">4×12 · 60kg</span></div>
+    <div class="exercise-item"><span class="ex-num">4</span><span class="ex-name">덤벨 플라이 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×12 · 8kg</span></div>
+    <div class="exercise-item"><span class="ex-num">5</span><span class="ex-name">푸시업 <span class="ex-badge badge-body">맨몸</span></span><span class="ex-vol">3×15</span></div>
+    <div class="section-label">삼두 (Triceps)</div>
+    <div class="exercise-item"><span class="ex-num">6</span><span class="ex-name">케이블 트라이셉 푸쉬다운</span><span class="ex-vol">4×10 · 55kg</span></div>
+    <div class="exercise-item"><span class="ex-num">7</span><span class="ex-name">덤벨 오버헤드 익스텐션 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×12 · 10kg</span></div>
+  </div>
+  <div class="alt-section">
+    <div class="alt-label">기구 밀릴 때 대체</div>
+    <table class="alt-table">
+      <tr><th>메인</th><th></th><th>대체 1</th><th>대체 2</th><th>대체 3</th></tr>
+      <tr><td>스미스 벤치</td><td class="alt-arrow">→</td><td>체스트프레스</td><td>덤벨 프레스</td><td>푸시업</td></tr>
+      <tr><td>인클라인 머신</td><td class="alt-arrow">→</td><td>스미스 벤치</td><td>덤벨 인클라인</td><td>푸시업 (발올림)</td></tr>
+      <tr><td>트라이셉 푸쉬다운</td><td class="alt-arrow">→</td><td>덤벨 익스텐션</td><td>벤치 딥스</td><td>클로즈 푸시업</td></tr>
+      <tr><td>싸이클</td><td class="alt-arrow">→</td><td>트레드밀</td><td>줄넘기</td><td>스트레칭만</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== DAY 3 ===== -->
+<div class="day-card" style="--day-color: var(--day3)">
+  <div class="card-header">
+    <div>
+      <div class="day-label">Day 3 · 수요일</div>
+      <div class="day-title">하체 + 코어 A</div>
+      <div class="day-tags">
+        <span class="tag" style="background:rgba(78,205,196,0.08);border-color:rgba(78,205,196,0.3);color:var(--day3)">Legs A</span>
+        <span class="tag">전면하체</span><span class="tag">복근</span>
+      </div>
+    </div>
+    <div class="day-num">03</div>
+  </div>
+  <div class="exercise-list">
+    <div class="cardio-item">
+      <div class="cardio-icon">🏃</div>
+      <div>
+        <div class="cardio-name">인클라인 트레드밀 러닝</div>
+        <div class="cardio-detail">15분 · 4km/h · 경사 14</div>
+      </div>
+    </div>
+    <div class="section-label">전면 하체 — 대퇴사두 중심</div>
+    <div class="exercise-item"><span class="ex-num">1</span><span class="ex-name">시티드 레그 프레스</span><span class="ex-vol">4×12 · 65kg</span></div>
+    <div class="exercise-item"><span class="ex-num">2</span><span class="ex-name">브이 스쿼트 <span class="ex-badge badge-new">추가</span></span><span class="ex-vol">4×12</span></div>
+    <div class="exercise-item"><span class="ex-num">3</span><span class="ex-name">스미스 머신 스쿼트 <span class="ex-badge badge-new">추가</span></span><span class="ex-vol">3×10 · 30kg</span></div>
+    <div class="exercise-item"><span class="ex-num">4</span><span class="ex-name">덤벨 스쿼트 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×12 · 12kg</span></div>
+    <div class="section-label">후면 하체 — 햄스트링 중심</div>
+    <div class="exercise-item"><span class="ex-num">5</span><span class="ex-name">레그 컬</span><span class="ex-vol">3×13 · 20kg</span></div>
+    <div class="exercise-item"><span class="ex-num">6</span><span class="ex-name">힙 어브덕션 머신 <span class="ex-badge badge-new">추가</span></span><span class="ex-vol">3×15</span></div>
+    <div class="section-label">코어 (Core)</div>
+    <div class="exercise-item"><span class="ex-num">7</span><span class="ex-name">시티드 니업</span><span class="ex-vol">3×15</span></div>
+    <div class="exercise-item"><span class="ex-num">8</span><span class="ex-name">캡틴스 체어 레그 레이즈</span><span class="ex-vol">3×12</span></div>
+    <div class="exercise-item"><span class="ex-num">9</span><span class="ex-name">크런치</span><span class="ex-vol">3×15</span></div>
+  </div>
+  <div class="alt-section">
+    <div class="alt-label">기구 밀릴 때 대체</div>
+    <table class="alt-table">
+      <tr><th>메인</th><th></th><th>대체 1</th><th>대체 2</th><th>대체 3</th></tr>
+      <tr><td>레그 프레스</td><td class="alt-arrow">→</td><td>브이 스쿼트</td><td>스미스 스쿼트</td><td>덤벨 스쿼트</td></tr>
+      <tr><td>브이 스쿼트</td><td class="alt-arrow">→</td><td>스미스 스쿼트</td><td>덤벨 스쿼트</td><td>맨몸 스쿼트</td></tr>
+      <tr><td>레그 컬</td><td class="alt-arrow">→</td><td>루마니안 데드</td><td>힙 브릿지</td><td>덤벨 루마니안</td></tr>
+      <tr><td>힙 어브덕션</td><td class="alt-arrow">→</td><td>사이드 런지</td><td>밴드 어브덕션</td><td>클램쉘</td></tr>
+      <tr><td>트레드밀</td><td class="alt-arrow">→</td><td>싸이클</td><td>줄넘기</td><td>스트레칭만</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== DAY 4 ===== -->
+<div class="day-card" style="--day-color: var(--day4)">
+  <div class="card-header">
+    <div>
+      <div class="day-label">Day 4 · 목요일</div>
+      <div class="day-title">등 + 이두 B</div>
+      <div class="day-tags">
+        <span class="tag" style="background:rgba(168,224,99,0.08);border-color:rgba(168,224,99,0.3);color:var(--day4)">Pull B</span>
+        <span class="tag">당기기</span><span class="tag">각도변형</span>
+      </div>
+    </div>
+    <div class="day-num">04</div>
+  </div>
+  <div class="exercise-list">
+    <div class="cardio-item">
+      <div class="cardio-icon">🚴</div>
+      <div>
+        <div class="cardio-name">싸이클</div>
+        <div class="cardio-detail">15분 · 인터벌</div>
+      </div>
+    </div>
+    <div class="section-label">등 (Back)</div>
+    <div class="exercise-item"><span class="ex-num">1</span><span class="ex-name">시티드 로우 머신</span><span class="ex-vol">4×13 · 40kg</span></div>
+    <div class="exercise-item"><span class="ex-num">2</span><span class="ex-name">스미스 머신 바벨 로우</span><span class="ex-vol">4×13 · 35kg</span></div>
+    <div class="exercise-item"><span class="ex-num">3</span><span class="ex-name">백 익스텐션</span><span class="ex-vol">4×9</span></div>
+    <div class="exercise-item"><span class="ex-num">4</span><span class="ex-name">덤벨 원암 로우 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×12 · 16kg</span></div>
+    <div class="section-label">이두 (Biceps)</div>
+    <div class="exercise-item"><span class="ex-num">5</span><span class="ex-name">프리쳐 컬 머신</span><span class="ex-vol">4×13 · 55kg</span></div>
+    <div class="exercise-item"><span class="ex-num">6</span><span class="ex-name">덤벨 바이셉 컬 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">4×10 · 12kg</span></div>
+    <div class="exercise-item"><span class="ex-num">7</span><span class="ex-name">인클라인 덤벨 컬 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×10 · 10kg</span></div>
+  </div>
+  <div class="alt-section">
+    <div class="alt-label">기구 밀릴 때 대체</div>
+    <table class="alt-table">
+      <tr><th>메인</th><th></th><th>대체 1</th><th>대체 2</th><th>대체 3</th></tr>
+      <tr><td>로우 머신</td><td class="alt-arrow">→</td><td>케이블 로우</td><td>바벨 로우</td><td>덤벨 원암 로우</td></tr>
+      <tr><td>바벨 로우</td><td class="alt-arrow">→</td><td>로우 머신</td><td>케이블 로우</td><td>랫 풀다운</td></tr>
+      <tr><td>백 익스텐션</td><td class="alt-arrow">→</td><td>루마니안 데드</td><td>힙 브릿지</td><td>버드독</td></tr>
+      <tr><td>프리쳐 컬</td><td class="alt-arrow">→</td><td>덤벨 컬</td><td>해머 컬</td><td>인클라인 컬</td></tr>
+      <tr><td>싸이클</td><td class="alt-arrow">→</td><td>트레드밀</td><td>줄넘기</td><td>스트레칭만</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== DAY 5 ===== -->
+<div class="day-card" style="--day-color: var(--day5)">
+  <div class="card-header">
+    <div>
+      <div class="day-label">Day 5 · 금요일</div>
+      <div class="day-title">어깨 + 삼두</div>
+      <div class="day-tags">
+        <span class="tag" style="background:rgba(247,151,30,0.08);border-color:rgba(247,151,30,0.3);color:var(--day5)">Push B</span>
+        <span class="tag">밀기</span><span class="tag">유산소</span>
+      </div>
+    </div>
+    <div class="day-num">05</div>
+  </div>
+  <div class="exercise-list">
+    <div class="cardio-item">
+      <div class="cardio-icon">🏃</div>
+      <div>
+        <div class="cardio-name">인클라인 트레드밀 러닝</div>
+        <div class="cardio-detail">15분 · 4km/h · 경사 14</div>
+      </div>
+    </div>
+    <div class="section-label">어깨 (Shoulders)</div>
+    <div class="exercise-item"><span class="ex-num">1</span><span class="ex-name">솔더 프레스 머신</span><span class="ex-vol">4×10 · 40kg</span></div>
+    <div class="exercise-item"><span class="ex-num">2</span><span class="ex-name">덤벨 솔더 프레스</span><span class="ex-vol">4×10 · 10.5kg</span></div>
+    <div class="exercise-item"><span class="ex-num">3</span><span class="ex-name">패러럴 그립 펙 덱 리어 델트</span><span class="ex-vol">3×14 · 35kg</span></div>
+    <div class="exercise-item"><span class="ex-num">4</span><span class="ex-name">덤벨 레터럴 레이즈 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×15 · 6kg</span></div>
+    <div class="exercise-item"><span class="ex-num">5</span><span class="ex-name">덤벨 프론트 레이즈 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×12 · 6kg</span></div>
+    <div class="section-label">삼두 (Triceps)</div>
+    <div class="exercise-item"><span class="ex-num">6</span><span class="ex-name">케이블 트라이셉 푸쉬다운</span><span class="ex-vol">4×10 · 55kg</span></div>
+    <div class="exercise-item"><span class="ex-num">7</span><span class="ex-name">벤치 딥스 <span class="ex-badge badge-body">맨몸</span></span><span class="ex-vol">3×12</span></div>
+  </div>
+  <div class="alt-section">
+    <div class="alt-label">기구 밀릴 때 대체</div>
+    <table class="alt-table">
+      <tr><th>메인</th><th></th><th>대체 1</th><th>대체 2</th><th>대체 3</th></tr>
+      <tr><td>솔더 머신</td><td class="alt-arrow">→</td><td>덤벨 프레스</td><td>아놀드 프레스</td><td>스미스 숄더</td></tr>
+      <tr><td>리어 델트</td><td class="alt-arrow">→</td><td>덤벨 리어 플라이</td><td>케이블 리어 델트</td><td>페이스 풀</td></tr>
+      <tr><td>레터럴 레이즈</td><td class="alt-arrow">→</td><td>케이블 레이즈</td><td>업라이트 로우</td><td>밴드 레이즈</td></tr>
+      <tr><td>트라이셉 푸쉬다운</td><td class="alt-arrow">→</td><td>벤치 딥스</td><td>덤벨 익스텐션</td><td>클로즈 푸시업</td></tr>
+      <tr><td>트레드밀</td><td class="alt-arrow">→</td><td>싸이클</td><td>줄넘기</td><td>스트레칭만</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ===== DAY 6 ===== -->
+<div class="day-card" style="--day-color: var(--day6)">
+  <div class="card-header">
+    <div>
+      <div class="day-label">Day 6 · 토요일</div>
+      <div class="day-title">하체 + 코어 B</div>
+      <div class="day-tags">
+        <span class="tag" style="background:rgba(249,83,198,0.08);border-color:rgba(249,83,198,0.3);color:var(--day6)">Legs B</span>
+        <span class="tag">후면하체</span><span class="tag">엉덩이</span><span class="tag">복근</span>
+      </div>
+    </div>
+    <div class="day-num">06</div>
+  </div>
+  <div class="exercise-list">
+    <div class="cardio-item">
+      <div class="cardio-icon">🚴</div>
+      <div>
+        <div class="cardio-name">싸이클</div>
+        <div class="cardio-detail">20분 · 인터벌 · 6저항</div>
+      </div>
+    </div>
+    <div class="section-label">후면 하체 — 햄스트링·둔근 중심</div>
+    <div class="exercise-item"><span class="ex-num">1</span><span class="ex-name">바벨 스티프 레그 데드리프트 <span class="ex-badge badge-new">추가</span></span><span class="ex-vol">4×10 · 30kg</span></div>
+    <div class="exercise-item"><span class="ex-num">2</span><span class="ex-name">레그 컬</span><span class="ex-vol">4×13 · 20kg</span></div>
+    <div class="exercise-item"><span class="ex-num">3</span><span class="ex-name">힙 어브덕션 머신 <span class="ex-badge badge-new">추가</span></span><span class="ex-vol">3×20</span></div>
+    <div class="exercise-item"><span class="ex-num">4</span><span class="ex-name">글루트 브릿지 <span class="ex-badge badge-body">맨몸</span></span><span class="ex-vol">3×15</span></div>
+    <div class="section-label">전면 하체 — 대퇴사두 보조</div>
+    <div class="exercise-item"><span class="ex-num">5</span><span class="ex-name">스쿼트 <span class="ex-badge badge-body">맨몸</span></span><span class="ex-vol">3×15</span></div>
+    <div class="exercise-item"><span class="ex-num">6</span><span class="ex-name">덤벨 런지 <span class="ex-badge badge-db">덤벨</span></span><span class="ex-vol">3×10 · 8kg</span></div>
+    <div class="section-label">코어 (Core)</div>
+    <div class="exercise-item"><span class="ex-num">7</span><span class="ex-name">캡틴스 체어 레그 레이즈</span><span class="ex-vol">3×12</span></div>
+    <div class="exercise-item"><span class="ex-num">8</span><span class="ex-name">디클라인 크런치</span><span class="ex-vol">3×15</span></div>
+    <div class="exercise-item"><span class="ex-num">9</span><span class="ex-name">바이시클 크런치 <span class="ex-badge badge-body">맨몸</span></span><span class="ex-vol">3×20</span></div>
+  </div>
+  <div class="alt-section">
+    <div class="alt-label">기구 밀릴 때 대체</div>
+    <table class="alt-table">
+      <tr><th>메인</th><th></th><th>대체 1</th><th>대체 2</th><th>대체 3</th></tr>
+      <tr><td>스티프 데드</td><td class="alt-arrow">→</td><td>덤벨 루마니안</td><td>레그 컬</td><td>힙 브릿지</td></tr>
+      <tr><td>레그 컬</td><td class="alt-arrow">→</td><td>스티프 데드</td><td>덤벨 루마니안</td><td>글루트 브릿지</td></tr>
+      <tr><td>힙 어브덕션</td><td class="alt-arrow">→</td><td>사이드 런지</td><td>클램쉘</td><td>밴드 워크</td></tr>
+      <tr><td>덤벨 런지</td><td class="alt-arrow">→</td><td>스미스 스쿼트</td><td>브이 스쿼트</td><td>맨몸 런지</td></tr>
+      <tr><td>싸이클</td><td class="alt-arrow">→</td><td>트레드밀</td><td>줄넘기</td><td>스트레칭만</td></tr>
+    </table>
+  </div>
+</div>
+
+</div><!-- end grid -->
+
+<!-- Weekly schedule -->
+<div class="summary-card">
+  <div class="summary-title">📅 주간 스케줄</div>
+  <div class="week-grid">
+    <div class="week-day active" style="border-color:rgba(0,229,160,0.3)">
+      <div class="week-day-name">월</div>
+      <div class="week-day-content" style="color:var(--day1)">등<br>이두</div>
+      <div class="week-day-dot" style="background:var(--day1)"></div>
+    </div>
+    <div class="week-day active" style="border-color:rgba(255,107,53,0.3)">
+      <div class="week-day-name">화</div>
+      <div class="week-day-content" style="color:var(--day2)">가슴<br>삼두</div>
+      <div class="week-day-dot" style="background:var(--day2)"></div>
+    </div>
+    <div class="week-day active" style="border-color:rgba(78,205,196,0.3)">
+      <div class="week-day-name">수</div>
+      <div class="week-day-content" style="color:var(--day3)">하체A<br>코어</div>
+      <div class="week-day-dot" style="background:var(--day3)"></div>
+    </div>
+    <div class="week-day active" style="border-color:rgba(168,224,99,0.3)">
+      <div class="week-day-name">목</div>
+      <div class="week-day-content" style="color:var(--day4)">등B<br>이두B</div>
+      <div class="week-day-dot" style="background:var(--day4)"></div>
+    </div>
+    <div class="week-day active" style="border-color:rgba(247,151,30,0.3)">
+      <div class="week-day-name">금</div>
+      <div class="week-day-content" style="color:var(--day5)">어깨<br>삼두</div>
+      <div class="week-day-dot" style="background:var(--day5)"></div>
+    </div>
+    <div class="week-day active" style="border-color:rgba(249,83,198,0.3)">
+      <div class="week-day-name">토</div>
+      <div class="week-day-content" style="color:var(--day6)">하체B<br>코어B</div>
+      <div class="week-day-dot" style="background:var(--day6)"></div>
+    </div>
+    <div class="week-day rest">
+      <div class="week-day-name">일</div>
+      <div class="week-day-content" style="color:#444">완전<br>휴식</div>
+      <div class="week-day-dot" style="background:#333"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <span class="legend-title">배지 설명</span>
+  <span class="legend-item"><span class="ex-badge badge-new">추가</span> 이번에 새로 추가된 운동</span>
+  <span class="legend-item"><span class="ex-badge badge-db">덤벨</span> 덤벨 활용 운동</span>
+  <span class="legend-item"><span class="ex-badge badge-body">맨몸</span> 기구 없이 맨몸으로</span>
+</div>
+
+<!-- Principles -->
+<div class="principles">
+  <div class="principle">
+    <div class="principle-icon">🦵</div>
+    <div class="principle-text">
+      <h4>하체 A vs B 차이</h4>
+      <p>Day3은 대퇴사두(앞 허벅지) 중심, Day6은 햄스트링·둔근(뒤 허벅지·엉덩이) 중심. 전후 균형이 부상 예방의 핵심.</p>
+    </div>
+  </div>
+  <div class="principle">
+    <div class="principle-icon">⏱️</div>
+    <div class="principle-text">
+      <h4>유산소 항상 앞에</h4>
+      <p>저녁 9시 운동이라 유산소 뒤에 넣으면 수면 방해. 워밍업 겸 체지방 연소를 선행.</p>
+    </div>
+  </div>
+  <div class="principle">
+    <div class="principle-icon">🎯</div>
+    <div class="principle-text">
+      <h4>무게보다 자세</h4>
+      <p>1년 미만은 정확한 동작 반복이 우선. 스쿼트 계열은 특히 무릎이 발끝 넘지 않게 주의.</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  준킴쌤 × Claude · PPL 6분할 플랜 v2 · 매주 기록 보내면 같이 점검
+</div>
+
+</body>
+</html>
